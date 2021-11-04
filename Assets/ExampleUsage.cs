@@ -66,7 +66,7 @@ public class ExampleUsage : MonoBehaviour {
         // You can stick whatever logic or names you want here for windows you want to keep to render
 
         string windowLowerTitle = window.windowInfo.title.ToLower();
-        if (windowLowerTitle.Contains("meet"))
+        if (windowLowerTitle.Contains("desktop"))
         {
             return true;
         }
