@@ -110,10 +110,21 @@ namespace WinCapture
                 windowTexture = new Texture2D(windowWidth, windowHeight, TextureFormat.RGB24, false);
                 didChange = true;
             }
-            windowTexture.LoadRawTextureData(textureBytes);
-            windowTexture.Apply();
+            try
+            {
+                if (textureBytes.Length != 0)
+                {
+                    windowTexture.LoadRawTextureData(textureBytes);
+                    windowTexture.Apply();
+                }
+            }
+            catch
+            {
+                return null;
+            }
             return windowTexture;
         }
+
         public byte[] GetAlignedBytes(out bool didChange)
         {
             didChange = false;

@@ -140,8 +140,6 @@ namespace SimpleWebBrowser
                 Port = 8000 + r.Next(1000);
             }
 
-
-
             _mainEngine.InitPlugin(Width, Height, MemoryFile, Port, InitialURL,EnableWebRTC);
             //run initialization
             if (JSInitializationCode.Trim() != "")

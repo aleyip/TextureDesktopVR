@@ -71,7 +71,7 @@ namespace SimpleWebBrowser
         public event JavaScriptDialog OnJavaScriptDialog;
 
         #endregion
-
+    
         #region JSQuery
 
         public delegate void JavaScriptQuery(string message);
@@ -140,8 +140,6 @@ namespace SimpleWebBrowser
             kWidth = width;
             kHeight = height;
 
-
-
             _sharedFileName = sharedfilename;
             _port = port;
             _initialURL = initialURL;
@@ -150,14 +148,13 @@ namespace SimpleWebBrowser
             if (BrowserTexture == null)
                 BrowserTexture = new Texture2D(kWidth, kHeight, TextureFormat.BGRA32, false);
 
-
-
             sPixelLock = new object();
 
 
             string args = BuildParamsString();
 
             bool connected = false;
+
             while (!connected)
             {
                 try
@@ -173,8 +170,6 @@ namespace SimpleWebBrowser
                         }
                     };
 
-
-
                     _pluginProcess.Start();
                     Initialized = false;
                 }
@@ -187,9 +182,6 @@ namespace SimpleWebBrowser
 
                 connected = ConnectTcp(out _clientSocket);
             }
-
-
-
         }
 
         private string BuildParamsString()

@@ -16,14 +16,14 @@ namespace WinCapture
         public event AddWindow OnAddWindow;
         public event RemoveWindow OnRemoveWindow;
 
-        WindowsHolder windowsHolder;
+        private WindowsHolder windowsHolder;
+        
         // Apply WinCapture/WindowShader shader to any resulting textures
         public WindowCaptureManager()
         {
             windowsHolder = new WindowsHolder();
             windowsHolder.OnAddWindow += OnAddWindowFound;
             windowsHolder.OnRemoveWindow += OnRemoveWindowFound;
-
             windowCapturers = new Dictionary<IntPtr, WindowCapture>();
 
             List<Win32Types.DisplayInfo> monitorInfos = Win32Funcs.GetDisplays();

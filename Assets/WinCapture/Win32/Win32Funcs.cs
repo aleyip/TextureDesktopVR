@@ -8,8 +8,6 @@ namespace WinCapture
     // Much of this is from pinvoke.net
     public class Win32Funcs
     {
-
-
         [DllImport("user32.dll")]
         public static extern IntPtr GetDC(IntPtr hWnd);
 
@@ -212,6 +210,9 @@ namespace WinCapture
         [DllImport("user32.dll", SetLastError = true)]
         public static extern IntPtr FindWindow(string lpClassName, string lpWindowName);
 
+        [DllImport("user32.dll", SetLastError = true)]
+        public static extern IntPtr FindWindowEx(IntPtr hwndParent, IntPtr hwndChildAfter, string lpszClass, string lpszWindow);
+
         /// <summary>
         /// Retrieves the handle to the ancestor of the specified window. 
         /// </summary>
@@ -308,6 +309,8 @@ namespace WinCapture
         [DllImport("user32.dll")]
         public static extern bool GetCursorPos(out Win32Types.PointL lpPoint);
 
+        [DllImport("user32.dll")]
+        public static extern bool PostMessage(IntPtr hWnd, uint Msg, int wParam, int lParam);
 
         // From https://code.msdn.microsoft.com/windowsapps/Enumerate-top-level-9aa9d7c1
         public delegate bool EnumWindowsProc(IntPtr hWnd, IntPtr lParam);

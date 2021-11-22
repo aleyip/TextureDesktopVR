@@ -2,6 +2,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.UIElements;
 using WinCapture;
 
 public class ExampleUsage : MonoBehaviour {
@@ -35,7 +36,6 @@ public class ExampleUsage : MonoBehaviour {
         lastUpdateTime = Time.time;
         lastPollWindowsTime = Time.time;
 
-
         int displayNum = 0;
         desktopCapture1 = new DesktopCapture(displayNum);
 
@@ -43,14 +43,16 @@ public class ExampleUsage : MonoBehaviour {
         desktopObject.name = "desktop" + displayNum;
         desktopObject.transform.GetComponent<Renderer>().material = new Material(desktopShader);
         desktopObject.transform.localEulerAngles = new Vector3(90, 0, 0);
-        return;
 
-        chromiumCapture = new ChromiumCapture(1024, 1024, "http://google.com");
+        /*Isso nao funciona, problema em BrowserEngine::ConnectTcp aparentemente
+        //chromiumCapture = new ChromiumCapture(1024, 1024, "http://google.com");
 
-        chromiumObject = GameObject.CreatePrimitive(PrimitiveType.Plane);
-        chromiumObject.name = "chromium capture";
-        chromiumObject.transform.GetComponent<Renderer>().material = new Material(chromiumShader);
-        chromiumObject.transform.localEulerAngles = new Vector3(90, 0, 0);
+        //chromiumObject = GameObject.CreatePrimitive(PrimitiveType.Plane);
+        //chromiumObject.name = "chromium capture";
+        //chromiumObject.transform.GetComponent<Renderer>().material = new Material(chromiumShader);
+        //chromiumObject.transform.localEulerAngles = new Vector3(90, 0, 0);
+        */
+        Debug.Log("Hello");
     }
 
     // You need to do this because the desktop capture API will only work if we are on the graphics thread
@@ -66,7 +68,7 @@ public class ExampleUsage : MonoBehaviour {
         // You can stick whatever logic or names you want here for windows you want to keep to render
 
         string windowLowerTitle = window.windowInfo.title.ToLower();
-        if (windowLowerTitle.Contains("desktop"))
+        if (windowLowerTitle.Contains("sem"))
         {
             return true;
         }
@@ -83,6 +85,7 @@ public class ExampleUsage : MonoBehaviour {
             windowObject.transform.localEulerAngles = new Vector3(90, 0, 0);
             windowsRendering[window.hwnd] = window;
             windowObjects[window.hwnd] = windowObject;
+            Debug.Log("Add");
         }
     }
 
@@ -108,6 +111,58 @@ public class ExampleUsage : MonoBehaviour {
     // Update is called once per frame
     void Update()
     {
+        //TOMAR CUIDADO, ORDENADAS DA JANELA EH DE CIMA PRA BAIXO, TELA DE BAIXO PRA CIMA?
+        Int32 mousePos;
+        {
+            Int32 xMouse = (Int32)Input.mousePosition.x;
+            Int32 yMouse = (Int32)Input.mousePosition.y;
+            mousePos = (Int32)((yMouse << 16) | xMouse);
+        }
+
+        //NotePad
+        foreach (IntPtr key in windowsRendering.Keys)
+        {
+            Debug.Log($"title {windowsRendering[key].windowInfo.title} {windowsRendering[key].windowInfo.hwnd}");
+            var pointer = Win32Funcs.FindWindowEx(windowsRendering[key].windowInfo.hwnd, IntPtr.Zero, "edit", null);
+            if (pointer != IntPtr.Zero)
+            {
+                Debug.Log(Win32Funcs.PostMessage(pointer, Win32Types.command.WM_MOUSEMOVE, 0, mousePos));
+                if (Input.GetMouseButtonDown(0))
+                {
+                    Debug.Log("Pressed primary button");
+                    Debug.Log(Win32Funcs.PostMessage(pointer, Win32Types.command.WM_LBUTTONDOWN, 0, mousePos));
+                }
+                else if (Input.GetMouseButtonUp(0))
+                {
+                    Debug.Log("Unpressed primary button");
+                    Debug.Log(Win32Funcs.PostMessage(pointer, Win32Types.command.WM_LBUTTONUP, 0, mousePos));
+                }
+                else if (Input.anyKeyDown)
+                {
+                    string str = Input.inputString;
+                    Debug.Log("Trying click " + str);
+                    foreach (char c in str)
+                        Debug.Log(Win32Funcs.PostMessage(pointer, Win32Types.command.WM_CHAR, c, 0x0001));
+                }
+            }
+            else
+                Debug.Log("FALSE");
+        }
+        //end NotePad
+
+        //var pointer = Win32Funcs.FindWindowEx(windowsRendering[key].windowInfo.hwnd, IntPtr.Zero, "MSPaintView", null); //Classe Edit funciona pro notepad
+        //pointer = Win32Funcs.FindWindowEx(pointer, IntPtr.Zero, "Afx:00007FF7A92F0000:8", null);
+        //if (pointer != IntPtr.Zero)
+        //{
+        //    if (Input.GetMouseButtonDown(0))
+        //    {
+        //        Debug.Log("Pressed primary button");
+        //        Debug.Log(Win32Funcs.PostMessage(pointer, WM_LBUTTONDOWN, 0, 0));
+        //    }
+        //    foreach (char c in str)
+        //        Debug.Log(Win32Funcs.PostMessage(pointer, WM_CHAR, c, 0x0001));
+        //}
+
         bool didChange;
         //Texture2D chromiumTexture = chromiumCapture.GetChromiumTexture(out didChange);
         //if (didChange)
@@ -146,10 +201,10 @@ public class ExampleUsage : MonoBehaviour {
         WindowCapture.UpdateCursorInfo();
 
         // Capture each window
-        Debug.Log($"Number of windows: {windowsRendering.Count}");
+        //Debug.Log($"Number of windows: {windowsRendering.Count}");
         foreach (IntPtr key in windowsRendering.Keys)
         {
-            Debug.Log($"Name of windows: {windowsRendering[key].windowInfo.title}");
+            //Debug.Log($"Name of windows: {windowsRendering[key].windowInfo.title}");
             WindowCapture window = windowsRendering[key];
             GameObject windowObject = windowObjects[key];
 
@@ -177,5 +232,11 @@ public class ExampleUsage : MonoBehaviour {
             // calls OnAddWindow or OnRemoveWindow above if any windows have been added or removed
             captureManager.Poll();
         }
+
+        //if (Input.GetKeyDown("space"))
+        //{
+        //    Debug.Log("Trying click");
+        //    Win32Funcs.PostMessage(windowPtr, 0x0204, 0, 0x0000);
+        //}
     }
 }

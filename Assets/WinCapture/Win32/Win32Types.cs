@@ -389,5 +389,13 @@ namespace WinCapture
             }
         }
 
+        public struct command
+        {
+            public const int WM_CHAR = 0x0102; //usado pra passar um char do teclado pra janela
+            public const int WM_MOUSEMOVE = 0x0200;
+            public const int WM_LBUTTONDOWN = 0x0201;
+            public const int WM_LBUTTONUP = 0x0202;
+        }
+
     }
 }
