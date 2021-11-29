@@ -15,6 +15,8 @@ public class AddRemoveWindows : MonoBehaviour
     public float captureRateFps = 30;
     public float windowPollPerSecond = 2;
 
+    public bool showNotepad, showPaint, showBrowser, showOthers;
+
     // Start is called before the first frame update
     void Start()
     {
@@ -62,18 +64,33 @@ public class AddRemoveWindows : MonoBehaviour
         Debug.Log(window.windowInfo.title);
         if (!listObjects.ContainsKey(window.hwnd))
         {
-            string windowLowerTitle = window.windowInfo.title.ToLower();
-            if (windowLowerTitle.Contains("bloco de notas"))
+            if (window.windowInfo.className.Equals("Notepad") && showNotepad)
             {
                 Debug.Log("Creating notepad");
                 NotePadApp newObj = gameObject.AddComponent<NotePadApp>();
                 newObj.passWindow(window);
                 listObjects[window.hwnd] = newObj;
             }
-            else if(windowLowerTitle.Contains("paint"))
+            else if(window.windowInfo.className.Equals("MSPaintApp") && showPaint)
             {
                 Debug.Log("Creating paint");
                 PaintApp newObj = gameObject.AddComponent<PaintApp>();
+                newObj.passWindow(window);
+                listObjects[window.hwnd] = newObj;
+            }
+            else if (window.windowInfo.className.Equals("Chrome_WidgetWin_1") && showBrowser)
+            {
+                //Não mostra imagem
+                Debug.Log("Creating edge browser");
+                BaseApplication newObj = gameObject.AddComponent<BaseApplication>();
+                newObj.passWindow(window);
+                listObjects[window.hwnd] = newObj;
+            }
+            else if (window.windowInfo.title.Contains("WPS Office") && showOthers)
+            {
+                //Não mostra imagem
+                Debug.Log("Creating other");
+                BaseApplication newObj = gameObject.AddComponent<BaseApplication>();
                 newObj.passWindow(window);
                 listObjects[window.hwnd] = newObj;
             }

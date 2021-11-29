@@ -1,3 +1,4 @@
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using WinCapture;
@@ -15,6 +16,9 @@ public class BaseApplication : MonoBehaviour
     protected GameObject windowObject;
 
     public float windowScale = 0.001f;
+
+    protected Int32 oldMousePos;
+    protected bool mousePosChanged = true;
 
     public void passWindow(WindowCapture window)
     {
@@ -43,14 +47,53 @@ public class BaseApplication : MonoBehaviour
         windowObject.transform.localEulerAngles = new Vector3(90, 0, 0);
     }
 
+    private Vector3 GetPlayerPlaneMousePos()
+    {
+        Plane plane = new Plane(windowObject.transform.position-Camera.main.transform.position, windowObject.transform.position);
+        Ray ray = Camera.main.ScreenPointToRay(Input.mousePosition);
+        float dist;
+        if (plane.Raycast(ray, out dist))
+        {
+            return ray.GetPoint(dist);
+        }
+        return Vector3.zero;
+    }
+
     // Update is called once per frame
     protected void Update()
     {
-        bool didChange;
+        //TOMAR CUIDADO, ORDENADAS DA JANELA EH DE CIMA PRA BAIXO, TELA DE BAIXO PRA CIMA?
+        //Int32 mousePos;
+        //{
+        //    Int32 xMouse = (Int32)Input.mousePosition.x;
+        //    Int32 yMouse = (Int32)Input.mousePosition.y;
+        //    mousePos = (Int32)((yMouse << 16) | xMouse);
+        //    if (oldMousePos != mousePos)
+        //    {
+        //        mousePosChanged = true;
+        //    }
+        //    oldMousePos = mousePos;
+        //}
+
+        //Funcionando para tela centrada na camera sem rotação. Passivel de ser necessário adicionar uma matriz de rotação caso o plano não esteja em 0,0,0.
+        Int32 mousePos;
+        {
+            Vector3 pointVec = GetPlayerPlaneMousePos();
+            Int32 xMouse = (Int32)(pointVec.x / (10*windowScale) + windowsRender.windowWidth/2.0);
+            Int32 yMouse = (Int32)(windowsRender.windowHeight / 2.0 - pointVec.y / (10*windowScale));
+            mousePos = (Int32)((yMouse << 16) | xMouse);
+            if (oldMousePos != mousePos && xMouse >= 0 && yMouse >= 0 && xMouse <= windowsRender.windowWidth && yMouse <= windowsRender.windowHeight)
+            {
+                mousePosChanged = true;
+            }
+            oldMousePos = mousePos;
+        }
+
+        bool didChangeTex;
         if (windowObject != null)
         {
-            Texture2D windowTexture = windowsRender.GetWindowTexture(out didChange);
-            if (didChange)
+            Texture2D windowTexture = windowsRender.GetWindowTexture(out didChangeTex);
+            if (didChangeTex)
             {
                 windowObject.GetComponent<Renderer>().material.mainTexture = windowTexture;
             }
