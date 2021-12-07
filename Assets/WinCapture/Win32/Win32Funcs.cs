@@ -310,7 +310,10 @@ namespace WinCapture
         public static extern bool GetCursorPos(out Win32Types.PointL lpPoint);
 
         [DllImport("user32.dll")]
-        public static extern bool PostMessage(IntPtr hWnd, uint Msg, int wParam, int lParam);
+        public static extern int PostMessage(IntPtr hWnd, uint Msg, int wParam, int lParam);
+
+        [DllImport("user32.dll")]
+        public static extern IntPtr SendMessage(IntPtr hWnd, uint Msg, int wParam, int lParam);
 
         // From https://code.msdn.microsoft.com/windowsapps/Enumerate-top-level-9aa9d7c1
         public delegate bool EnumWindowsProc(IntPtr hWnd, IntPtr lParam);

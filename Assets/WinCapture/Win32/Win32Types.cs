@@ -395,6 +395,11 @@ namespace WinCapture
             public const int WM_MOUSEMOVE = 0x0200;
             public const int WM_LBUTTONDOWN = 0x0201;
             public const int WM_LBUTTONUP = 0x0202;
+            public const int WM_KEYDOWN = 0x0100;
+            public const int WM_KEYUP = 0x0101;
+            public const int WM_NCHITTEST = 0x0084;
+            public const int WM_PARENTNOTIFY = 0x0210;
+            public const int WM_MOUSEACTIVATE = 0x0021;
         }
 
     }

@@ -17,6 +17,8 @@ public class AddRemoveWindows : MonoBehaviour
 
     public bool showNotepad, showPaint, showBrowser, showOthers;
 
+    Vector3 createPos = new Vector3(0, -10, 0);
+
     // Start is called before the first frame update
     void Start()
     {
@@ -61,7 +63,7 @@ public class AddRemoveWindows : MonoBehaviour
     void OnAddWindow(WindowCapture window)
     {
         Debug.Log("Trying");
-        Debug.Log(window.windowInfo.title);
+        Debug.Log($"{window.windowInfo.title} {window.windowInfo.hwnd.ToInt64():X}");
         if (!listObjects.ContainsKey(window.hwnd))
         {
             if (window.windowInfo.className.Equals("Notepad") && showNotepad)
@@ -69,6 +71,7 @@ public class AddRemoveWindows : MonoBehaviour
                 Debug.Log("Creating notepad");
                 NotePadApp newObj = gameObject.AddComponent<NotePadApp>();
                 newObj.passWindow(window);
+                newObj.Move(createPos);
                 listObjects[window.hwnd] = newObj;
             }
             else if(window.windowInfo.className.Equals("MSPaintApp") && showPaint)
@@ -76,6 +79,7 @@ public class AddRemoveWindows : MonoBehaviour
                 Debug.Log("Creating paint");
                 PaintApp newObj = gameObject.AddComponent<PaintApp>();
                 newObj.passWindow(window);
+                newObj.Move(createPos);
                 listObjects[window.hwnd] = newObj;
             }
             else if (window.windowInfo.className.Equals("Chrome_WidgetWin_1") && showBrowser)
@@ -84,14 +88,16 @@ public class AddRemoveWindows : MonoBehaviour
                 Debug.Log("Creating edge browser");
                 BaseApplication newObj = gameObject.AddComponent<BaseApplication>();
                 newObj.passWindow(window);
+                newObj.Move(createPos);
                 listObjects[window.hwnd] = newObj;
             }
             else if (window.windowInfo.title.Contains("WPS Office") && showOthers)
             {
                 //Não mostra imagem
                 Debug.Log("Creating other");
-                BaseApplication newObj = gameObject.AddComponent<BaseApplication>();
+                BaseApplication newObj = gameObject.AddComponent<WPSApp>();
                 newObj.passWindow(window);
+                newObj.Move(createPos);
                 listObjects[window.hwnd] = newObj;
             }
             Debug.Log("Add");
