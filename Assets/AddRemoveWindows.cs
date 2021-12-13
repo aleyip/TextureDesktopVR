@@ -15,14 +15,18 @@ public class AddRemoveWindows : MonoBehaviour
     public float captureRateFps = 30;
     public float windowPollPerSecond = 2;
 
-    public bool showNotepad, showPaint, showBrowser, showOthers;
+    public bool showNotepad, showPaint, showBrowser, showSheets, showOthers;
 
     Vector3 createPos = new Vector3(0, -10, 0);
+
+    private Pointer pointer;
 
     // Start is called before the first frame update
     void Start()
     {
         listObjects = new Dictionary<IntPtr, BaseApplication>();
+
+        pointer = GameObject.Find("Pointer").GetComponent<Pointer>();
 
         captureManager = new WindowCaptureManager();
         captureManager.OnAddWindow += OnAddWindow;
@@ -91,11 +95,11 @@ public class AddRemoveWindows : MonoBehaviour
                 newObj.Move(createPos);
                 listObjects[window.hwnd] = newObj;
             }
-            else if (window.windowInfo.title.Contains("WPS Office") && showOthers)
+            else if (window.windowInfo.className.Equals("SALFRAME") && showSheets)
             {
                 //Não mostra imagem
-                Debug.Log("Creating other");
-                BaseApplication newObj = gameObject.AddComponent<WPSApp>();
+                Debug.Log("Creating sheets");
+                BaseApplication newObj = gameObject.AddComponent<LibreOfficeCalcApp>();
                 newObj.passWindow(window);
                 newObj.Move(createPos);
                 listObjects[window.hwnd] = newObj;

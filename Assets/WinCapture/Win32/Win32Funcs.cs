@@ -33,6 +33,9 @@ namespace WinCapture
         [DllImport("user32.dll")]
         public static extern bool GetWindowRect(IntPtr hWnd, out Win32Types.RECT lpRect);
 
+        [DllImport("user32.dll")]
+        public static extern bool GetClientRect(IntPtr hWnd, out Win32Types.RECT lpRect);
+
         /// <summary>Selects an object into the specified device context (DC). The new object replaces the previous object of the same type.</summary>
         /// <param name="hdc">A handle to the DC.</param>
         /// <param name="hgdiobj">A handle to the object to be selected.</param>
@@ -314,6 +317,12 @@ namespace WinCapture
 
         [DllImport("user32.dll")]
         public static extern IntPtr SendMessage(IntPtr hWnd, uint Msg, int wParam, int lParam);
+
+        [DllImport("user32.dll", SetLastError = true)]
+        public static extern bool MoveWindow(IntPtr hWnd, int X, int Y, int nWidth, int nHeight, bool bRepaint);
+
+        [DllImport("user32.dll", SetLastError = true)]
+        public static extern int GetWindowThreadProcessId(IntPtr hWnd, out int processId);
 
         // From https://code.msdn.microsoft.com/windowsapps/Enumerate-top-level-9aa9d7c1
         public delegate bool EnumWindowsProc(IntPtr hWnd, IntPtr lParam);

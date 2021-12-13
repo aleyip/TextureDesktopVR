@@ -400,6 +400,7 @@ namespace WinCapture
             public const int WM_NCHITTEST = 0x0084;
             public const int WM_PARENTNOTIFY = 0x0210;
             public const int WM_MOUSEACTIVATE = 0x0021;
+            public const int WM_CLOSE = 0x0010;
         }
 
     }

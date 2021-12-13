@@ -42,7 +42,7 @@ namespace WinCapture
 
         void SetupWindowCapture()
         {
-            UpdateCursorInfo();
+            //UpdateCursorInfo();
 
             // Get the device context
             if (isDesktop)
@@ -134,7 +134,7 @@ namespace WinCapture
                 didChange = true;
             }
             int numBytesPerRow;
-            WindowCapture.UpdateCursorInfo();
+            //WindowCapture.UpdateCursorInfo();
             byte[] bitmapBytes = GetWindowContents(out numBytesPerRow);
             if (bitmapBytes != null)
             {
@@ -274,7 +274,7 @@ namespace WinCapture
         public static Point iconDims;
         public static IntPtr cursorHandle;
         
-
+        /*
         public static void UpdateCursorInfo()
         {
             // TODO - make sure everything here is cleaned up properly?
@@ -329,7 +329,7 @@ namespace WinCapture
             int cursorX = cursorPos.x - hotspot.X;
             int cursorY = cursorPos.y - hotspot.Y;
             cursorRect = new Win32Types.RECT(cursorX, cursorY, cursorX + iconDims.X, cursorY + iconDims.Y);
-        }
+        }*/
 
 
         public void Dispose()

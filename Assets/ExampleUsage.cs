@@ -198,7 +198,7 @@ public class ExampleUsage : MonoBehaviour {
         }
 
         // Gets information about position and icon of the cursor so you can render it onto the captured surfaces
-        WindowCapture.UpdateCursorInfo();
+        //WindowCapture.UpdateCursorInfo();
 
         // Capture each window
         //Debug.Log($"Number of windows: {windowsRendering.Count}");
