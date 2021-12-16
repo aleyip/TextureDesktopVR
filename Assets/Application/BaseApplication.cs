@@ -37,13 +37,17 @@ public class BaseApplication : MonoBehaviour
     enum MouseFunction { nothing, move, resizeHor, resizeVert, resizeDiag, changeDistance};
     MouseFunction function = MouseFunction.nothing;
 
-    static Color hoverActiveWindowColor = Color.green;
-    static Color hoverInactiveWindowColor = Color.red;
-    static Color hoverMoveColor = Color.blue;
-    static Color hoverDiagRescaleColor = new Color32(154, 0, 254, 1);
-    static Color hoverHorRescaleColor = Color.yellow;
-    static Color hoverVertRescaleColor = Color.yellow;
-    static Color changeDistanceColor = Color.cyan;
+    private void addTextureBorder(ref Texture2D tex, Color col, int top, int bottom, int left, int right)
+    {
+        for(int x = 0; x < tex.width; x++)
+            for(int y = 0; y< tex.height; y++)
+            {
+                if (y < top || 
+                    y >= tex.height - bottom ||
+                    x < left ||
+                    x >= tex.width - right) tex.SetPixel(x, y, col);
+            }
+    }
 
     public void passWindow(WindowCapture window)
     {
@@ -64,6 +68,18 @@ public class BaseApplication : MonoBehaviour
         Win32Funcs.GetWindowThreadProcessId(windowsRender.hwnd, out processId);
         Process p = Process.GetProcessById(processId);
         p.Kill();
+    }
+    
+    private Vector3 GetPlayerPlaneMousePos()
+    {
+        Plane plane = new Plane(windowObject.transform.position - Camera.main.transform.position, windowObject.transform.position);
+        //Ray ray = Camera.main.ScreenPointToRay(Input.mousePosition);
+        float dist;
+        if (plane.Raycast(pointer.rayPointer, out dist))
+        {
+            return pointer.rayPointer.GetPoint(dist);
+        }
+        return Vector3.zero;
     }
 
     // Start is called before the first frame update
@@ -88,18 +104,6 @@ public class BaseApplication : MonoBehaviour
 
     protected void Start()
     {
-    }
-
-    private Vector3 GetPlayerPlaneMousePos()
-    {
-        Plane plane = new Plane(windowObject.transform.position-Camera.main.transform.position, windowObject.transform.position);
-        //Ray ray = Camera.main.ScreenPointToRay(Input.mousePosition);
-        float dist;
-        if (plane.Raycast(pointer.rayPointer, out dist))
-        {
-            return pointer.rayPointer.GetPoint(dist);
-        }
-        return Vector3.zero;
     }
 
     // Update is called once per frame
@@ -128,31 +132,31 @@ public class BaseApplication : MonoBehaviour
                     if ((xMouse <= 3 && (yMouse <= 3 || yMouse >= windowsRender.windowHeight - 3)) ||
                          (xMouse >= windowsRender.windowWidth - 3 && (yMouse <= 3 || yMouse >= windowsRender.windowHeight - 3)))
                     {
-                        pointer.sphereColor = hoverDiagRescaleColor;
+                        pointer.sphereColor = ColorSettings.hoverDiagRescaleColor;
                     }
                     else if ((xMouse <= 3 || xMouse >= windowsRender.windowWidth - 3))
                     {
-                        pointer.sphereColor = hoverHorRescaleColor;
+                        pointer.sphereColor = ColorSettings.hoverHorRescaleColor;
                     }
                     else if ((yMouse <= 3 || yMouse >= windowsRender.windowHeight - 3))
                     {
-                        pointer.sphereColor = hoverVertRescaleColor;
+                        pointer.sphereColor = ColorSettings.hoverVertRescaleColor;
                     }
                     else if (yMouse < 30)
                     {
-                        pointer.sphereColor = hoverMoveColor;
+                        pointer.sphereColor = ColorSettings.hoverMoveColor;
                     }
                     else
                     {
                         if(pointer.activeObjectID == windowObject.GetInstanceID())
-                            pointer.sphereColor = hoverActiveWindowColor;
+                            pointer.sphereColor = ColorSettings.hoverActiveWindowColor;
                         else
-                            pointer.sphereColor = hoverInactiveWindowColor;
+                            pointer.sphereColor = ColorSettings.hoverInactiveWindowColor;
                     }
                 }
                 //Fim HOVER
                 if (function == MouseFunction.changeDistance)
-                    pointer.sphereColor = changeDistanceColor;
+                    pointer.sphereColor = ColorSettings.changeDistanceColor;
 
                 //Inicio FUNCOES JANELA
                 //Determina area das janelas que executa cada funcao
@@ -255,6 +259,7 @@ public class BaseApplication : MonoBehaviour
         if (windowObject != null)
         {
             Texture2D windowTexture = windowsRender.GetWindowTexture(out didChangeTex);
+            //addTextureBorder(ref windowTexture, Color.blue, 30, 3, 3, 3);
             if (didChangeTex)
             {
                 windowObject.GetComponent<Renderer>().material.mainTexture = windowTexture;

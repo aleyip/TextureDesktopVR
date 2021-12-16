@@ -19,6 +19,22 @@ namespace WinCapture
 
         int Port = 8885;
 
+        public int windowWidth
+        {
+            get {
+                return mainEngine.kWidth; }
+            set { mainEngine.kWidth = value; }
+        }
+        public int windowHeight
+        {
+            get { return mainEngine.kHeight; }
+            set { mainEngine.kHeight = value; }
+        }
+
+        public void resize()
+        {
+            mainEngine.BrowserTexture = new Texture2D(windowWidth, windowHeight, TextureFormat.BGRA32, false);
+        }
 
         public ChromiumCapture(int width, int height, string url, bool enableWebRTC=true)
         {
@@ -63,6 +79,11 @@ namespace WinCapture
                 didChange = true;
                 isFirst = false;
             }
+            else if (mainEngine.BrowserTexture.width != mainEngine.kWidth || mainEngine.BrowserTexture.height != mainEngine.kHeight)
+            {
+                didChange = true;
+                mainEngine.BrowserTexture = new Texture2D(mainEngine.kWidth, mainEngine.kHeight, TextureFormat.BGRA32, false);
+            }
 
             mainEngine.UpdateTexture();
             return mainEngine.BrowserTexture;
@@ -99,17 +120,14 @@ namespace WinCapture
         ////// I'll add an example of how to use it all in a bit                               //////
 
 
-        /*
-        public void UpdateInteract()
+        
+        public void insertText(string text)
         {
-            if (focused)
+            foreach (char c in text)
             {
-                foreach (char c in Input.inputString)
-                {
-                    mainEngine.SendCharEvent((int)c, KeyboardEventType.CharKey);
-                }
-                ProcessKeyEvents();
+                mainEngine.SendCharEvent((int)c, KeyboardEventType.CharKey);
             }
+            ProcessKeyEvents();
         }
 
         private void ProcessKeyEvents()
@@ -128,107 +146,62 @@ namespace WinCapture
                 mainEngine.SendCharEvent((int)code, KeyboardEventType.Up);
         }
 
-
-
-
-
-
-
-        // Input stuff
-
-
-        bool focused = false;
-        void OnMouseEnter()
-        {
-            focused = true;
-        }
-
-        void OnMouseExit()
-        {
-            focused = false;
-        }
-
-        void OnMouseDown()
+        void LeftButtonDown(int x, int y)
         {
             if (mainEngine.Initialized)
-            {
-                Vector2 pixelUV = GetScreenCoords();
-
-                if (pixelUV.x > 0)
-                {
-                    SendMouseButtonEvent((int)pixelUV.x, (int)pixelUV.y, MouseButton.Left, MouseEventType.ButtonDown);
-
-                }
-            }
+                    SendMouseButtonEvent(x, y, MouseButton.Left, MouseEventType.ButtonDown);
         }
 
-
-
-
-        void OnMouseUp()
+        void LeftButtonUp(int x, int y)
         {
             if (mainEngine.Initialized)
-            {
-                Vector2 pixelUV = GetScreenCoords();
-
-                if (pixelUV.x > 0)
-                {
-                    SendMouseButtonEvent((int)pixelUV.x, (int)pixelUV.y, MouseButton.Left, MouseEventType.ButtonUp);
-                }
-            }
+                    SendMouseButtonEvent(x, y, MouseButton.Left, MouseEventType.ButtonUp);
         }
 
         int posX, posY;
 
-        void OnMouseOver()
+        void OnMouseHover(int x, int y, bool flagHoldLeft, bool flagHoldMiddle, bool flagHoldRight, 
+            bool flagDownLeft, bool flagDownMiddle, bool flagDownRight, 
+            bool flagUpLeft, bool flagUpMiddle, bool flagUpRight)
         {
             if (mainEngine.Initialized)
             {
-                Vector2 pixelUV = GetScreenCoords();
+                ProcessScrollInput(x, y);
 
-                if (pixelUV.x > 0)
+                if (posX != x || posY != y)
                 {
-                    int px = (int)pixelUV.x;
-                    int py = (int)pixelUV.y;
-
-                    ProcessScrollInput(px, py);
-
-                    if (posX != px || posY != py)
+                    MouseMessage msg = new MouseMessage
                     {
-                        MouseMessage msg = new MouseMessage
-                        {
-                            Type = MouseEventType.Move,
-                            X = px,
-                            Y = py,
-                            GenericType = MessageLibrary.BrowserEventType.Mouse,
-                            // Delta = e.Delta,
-                            Button = MouseButton.None
-                        };
+                        Type = MouseEventType.Move,
+                        X = x,
+                        Y = y,
+                        GenericType = MessageLibrary.BrowserEventType.Mouse,
+                        // Delta = e.Delta,
+                        Button = MouseButton.None
+                    };
 
-                        if (Input.GetMouseButton(0))
-                            msg.Button = MouseButton.Left;
-                        if (Input.GetMouseButton(1))
-                            msg.Button = MouseButton.Right;
-                        if (Input.GetMouseButton(1))
-                            msg.Button = MouseButton.Middle;
+                    if (flagHoldLeft)
+                        msg.Button = MouseButton.Left;
+                    if (flagHoldRight)
+                        msg.Button = MouseButton.Right;
+                    if (flagHoldMiddle)
+                        msg.Button = MouseButton.Middle;
 
-                        posX = px;
-                        posY = py;
-                        mainEngine.SendMouseEvent(msg);
-                    }
-
-                    //check other buttons...
-                    if (Input.GetMouseButtonDown(1))
-                        SendMouseButtonEvent(px, py, MouseButton.Right, MouseEventType.ButtonDown);
-                    if (Input.GetMouseButtonUp(1))
-                        SendMouseButtonEvent(px, py, MouseButton.Right, MouseEventType.ButtonUp);
-                    if (Input.GetMouseButtonDown(2))
-                        SendMouseButtonEvent(px, py, MouseButton.Middle, MouseEventType.ButtonDown);
-                    if (Input.GetMouseButtonUp(2))
-                        SendMouseButtonEvent(px, py, MouseButton.Middle, MouseEventType.ButtonUp);
+                    posX = x;
+                    posY = x;
+                    mainEngine.SendMouseEvent(msg);
                 }
-            }
 
+                //check other buttons...
+                if (flagDownRight)
+                    SendMouseButtonEvent(x, y, MouseButton.Right, MouseEventType.ButtonDown);
+                if (flagUpRight)
+                    SendMouseButtonEvent(x, y, MouseButton.Right, MouseEventType.ButtonUp);
+                if (flagDownMiddle)
+                    SendMouseButtonEvent(x, y, MouseButton.Middle, MouseEventType.ButtonDown);
+                if (flagUpMiddle)
+                    SendMouseButtonEvent(x, y, MouseButton.Middle, MouseEventType.ButtonUp);
+            }
             // Debug.Log(pixelUV);
         }
 
@@ -283,7 +256,7 @@ namespace WinCapture
             RaycastHit hit;
             if (
                 !Physics.Raycast(
-                    interactCamera.ScreenPointToRay(Input.mousePosition), out hit))
+                    Camera.main.ScreenPointToRay(Input.mousePosition), out hit))
                 return new Vector2(-1f, -1f);
             Texture tex = mainEngine.BrowserTexture;
 
@@ -293,6 +266,6 @@ namespace WinCapture
             pixelUV.y *= tex.height;
             return pixelUV;
         }
-        */
+        
     }
 }

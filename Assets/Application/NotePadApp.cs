@@ -1,4 +1,5 @@
 using System;
+using System.Text;
 using System.Collections;
 using System.Collections.Generic;
 using WinCapture;
@@ -28,7 +29,6 @@ public class NotePadApp : BaseApplication
                 if (mousePosChanged)
                 {
                     int foo = Win32Funcs.PostMessage(windChild, Win32Types.command.WM_MOUSEMOVE, 0, oldMousePos - upLeftPos);
-                    Debug.Log(foo);
                     mousePosChanged = false;
                 }
 
@@ -37,13 +37,11 @@ public class NotePadApp : BaseApplication
                 {
                     Debug.Log("Pressed primary button");
                     int foo = Win32Funcs.PostMessage(windChild, Win32Types.command.WM_LBUTTONDOWN, 0, oldMousePos - upLeftPos);
-                    Debug.Log(foo);
                 }
                 else if (pointer.mouseLeftUp)
                 {
                     Debug.Log("Unpressed primary button");
                     int foo = Win32Funcs.PostMessage(windChild, Win32Types.command.WM_LBUTTONUP, 0, oldMousePos - upLeftPos);
-                    Debug.Log(foo);
                 }
                 else if (pointer.inputString != null)
                 {
@@ -51,7 +49,9 @@ public class NotePadApp : BaseApplication
                     foreach (char c in pointer.inputString)
                     {
                         int foo;
-                        foo = Win32Funcs.PostMessage(windChild, Win32Types.command.WM_KEYDOWN, c, 0x0001);
+                        if (Win32Types.VirtualKeyCode.ContainsKey(c)) foo = Win32Types.VirtualKeyCode[c];
+                        else foo = Convert.ToInt32(c);
+                        foo = Win32Funcs.PostMessage(windChild, Win32Types.command.WM_KEYDOWN, foo, 0x0001);
                         Debug.Log($"{foo}  { Convert.ToInt32(c)}");
                     }
                 }

@@ -38,7 +38,13 @@ public class LibreOfficeCalcApp : BaseApplication
                 else if (pointer.inputString != null)
                 {
                     foreach (char c in pointer.inputString)
-                        Debug.Log(Win32Funcs.PostMessage(windowsRender.windowInfo.hwnd, Win32Types.command.WM_CHAR, c, 0x0001));
+                    {
+                        int foo;
+                        if (Win32Types.VirtualKeyCode.ContainsKey(c)) foo = Win32Types.VirtualKeyCode[c];
+                        else foo = Convert.ToInt32(c);
+                        foo = Win32Funcs.PostMessage(windowsRender.windowInfo.hwnd, Win32Types.command.WM_KEYDOWN, foo, 0x0001);
+                        Debug.Log($"{foo}  { Convert.ToInt32(c)}");
+                    }
                 }
             }
             else

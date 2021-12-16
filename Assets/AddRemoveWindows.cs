@@ -3,6 +3,7 @@ using System.Collections;
 using System.Collections.Generic;
 using WinCapture;
 using UnityEngine;
+using SimpleWebBrowser;
 
 public class AddRemoveWindows : MonoBehaviour
 {
@@ -33,6 +34,17 @@ public class AddRemoveWindows : MonoBehaviour
         captureManager.OnRemoveWindow += OnRemoveWindow;
         lastUpdateTime = Time.time;
         lastPollWindowsTime = Time.time;
+
+        //if (showBrowser)
+        //{
+        //    //Debug.Log("Creating Browser");
+        //    //BrowserApp newObj = gameObject.AddComponent<BrowserApp>();
+        //    //newObj.setName("Browser1");
+        //    //newObj.Move(createPos);
+        //    //WebBrowser newObj = gameObject.AddComponent<WebBrowser>();
+        //    //var loadedObject = Resources.Load(@"Assets/SimpleWebBrowser/Prefabs/Browser2D.prefab");
+        //    //if (loadedObject == null) Debug.Log("Fail to load prefab");
+        //}
     }
 
     // Update is called once per frame
@@ -64,6 +76,13 @@ public class AddRemoveWindows : MonoBehaviour
         return false;
     }
 
+    void CreateBrowser(string name)
+    {
+        BrowserApp go = gameObject.AddComponent<BrowserApp>();
+        go.Move(createPos);
+        go.setName(name);
+    }
+
     void OnAddWindow(WindowCapture window)
     {
         Debug.Log("Trying");
@@ -86,15 +105,15 @@ public class AddRemoveWindows : MonoBehaviour
                 newObj.Move(createPos);
                 listObjects[window.hwnd] = newObj;
             }
-            else if (window.windowInfo.className.Equals("Chrome_WidgetWin_1") && showBrowser)
-            {
-                //Não mostra imagem
-                Debug.Log("Creating edge browser");
-                BaseApplication newObj = gameObject.AddComponent<BaseApplication>();
-                newObj.passWindow(window);
-                newObj.Move(createPos);
-                listObjects[window.hwnd] = newObj;
-            }
+            //else if (window.windowInfo.className.Equals("Chrome_WidgetWin_1") && showBrowser)
+            //{
+            //    //Não mostra imagem
+            //    Debug.Log("Creating edge browser");
+            //    BaseApplication newObj = gameObject.AddComponent<BaseApplication>();
+            //    newObj.passWindow(window);
+            //    newObj.Move(createPos);
+            //    listObjects[window.hwnd] = newObj;
+            //}
             else if (window.windowInfo.className.Equals("SALFRAME") && showSheets)
             {
                 //Não mostra imagem

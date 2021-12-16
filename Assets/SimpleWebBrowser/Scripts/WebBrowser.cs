@@ -9,10 +9,6 @@ using System.Collections.Generic;
 
 namespace SimpleWebBrowser
 {
-
-
-
-
     public class WebBrowser : MonoBehaviour
     {
 
@@ -30,7 +26,7 @@ namespace SimpleWebBrowser
 
         public bool RandomPort = true;
 
-        public string InitialURL = "http://www.google.com";
+        public string InitialURL = "http://www.reddit.com";
 
         public bool EnableWebRTC = false;
 
@@ -41,7 +37,7 @@ namespace SimpleWebBrowser
 
         #endregion
 
-
+        Pointer pointer;
 
         [Header("UI settings")]
         [SerializeField]
@@ -90,20 +86,14 @@ namespace SimpleWebBrowser
 
         private Material _mainMaterial;
 
-
-
-
-
         private BrowserEngine _mainEngine;
-
-
-
-        private bool _focused = false;
-
-
+        
+        //private bool _focused = false;
+        
         private int posX = 0;
         private int posY = 0;
 
+        bool changeSite = false;
 
         //why Unity does not store the links in package?
         void InitPrefabLinks()
@@ -144,6 +134,8 @@ namespace SimpleWebBrowser
             //run initialization
             if (JSInitializationCode.Trim() != "")
                 _mainEngine.RunJSOnce(JSInitializationCode);
+
+            pointer = GameObject.Find("Pointer").GetComponent<Pointer>();
         }
 
         // Use this for initialization
@@ -165,15 +157,13 @@ namespace SimpleWebBrowser
 
 
             mainUIPanel.MainCanvas.worldCamera = MainCamera;
-
-
-
-
+            mainUIPanel.UrlText.text = InitialURL;
+            mainUIPanel.fillString = InitialURL;
 
             // _mainInput = MainUrlInput.GetComponent<Input>();
-            mainUIPanel.KeepUIVisible = KeepUIVisible;
-            if (!KeepUIVisible)
-                mainUIPanel.Hide();
+            //mainUIPanel.KeepUIVisible = KeepUIVisible;
+            //if (!KeepUIVisible)
+            //    mainUIPanel.Hide();
 
             //attach dialogs and queries
             _mainEngine.OnJavaScriptDialog += _mainEngine_OnJavaScriptDialog;
@@ -182,7 +172,6 @@ namespace SimpleWebBrowser
 
             DialogCanvas.worldCamera = MainCamera;
             DialogCanvas.gameObject.SetActive(false);
-
         }
 
         private void _mainEngine_OnPageLoaded(string url)
@@ -257,11 +246,14 @@ namespace SimpleWebBrowser
 
         #region UI
 
-        public void OnNavigate()
+        public void Navigate()
         {
             // MainUrlInput.isFocused
-            _mainEngine.SendNavigateEvent(mainUIPanel.UrlField.text, false, false);
-
+            _mainEngine.SendNavigateEvent(mainUIPanel.editString, false, false);
+            mainUIPanel.fillString = mainUIPanel.editString;
+            mainUIPanel.editString = "";
+            Debug.Log(mainUIPanel.fillString);
+            Debug.Log(mainUIPanel.editString);
         }
 
         public void RunJavaScript(string js)
@@ -293,125 +285,151 @@ namespace SimpleWebBrowser
 
         #region Events (3D)
 
-        void OnMouseEnter()
-        {
-            _focused = true;
-            mainUIPanel.Show();
-        }
+        //void OnMouseEnter()
+        //{
+        //    _focused = true;
+        //    mainUIPanel.Show();
+        //}
 
-        void OnMouseExit()
-        {
-            _focused = false;
-            mainUIPanel.Hide();
-        }
+        //void OnMouseExit()
+        //{
+        //    _focused = false;
+        //    mainUIPanel.Hide();
+        //}
 
-        void OnMouseDown()
-        {
-
-            if (_mainEngine.Initialized)
-            {
-                Vector2 pixelUV = GetScreenCoords();
-
-                if (pixelUV.x > 0)
-                {
-                    SendMouseButtonEvent((int) pixelUV.x, (int) pixelUV.y, MouseButton.Left, MouseEventType.ButtonDown);
-
-                }
-            }
-
-        }
-
-
-
-
-        void OnMouseUp()
+        void ProcessMouseEvent()
         {
             if (_mainEngine.Initialized)
             {
-                Vector2 pixelUV = GetScreenCoords();
+                Texture tex = _mainMaterial.mainTexture;
 
-                if (pixelUV.x > 0)
+                int xMouse = (int)((1.0f-pointer.hit.textureCoord.x) * tex.width);
+                int yMouse = (int)((pointer.hit.textureCoord.y) * tex.height);
+
+                Debug.Log($"x {xMouse} y {yMouse}");
+                ProcessScrollInput(xMouse, yMouse);
+
+                if (posX != xMouse || posY != yMouse)
                 {
-                    SendMouseButtonEvent((int) pixelUV.x, (int) pixelUV.y, MouseButton.Left, MouseEventType.ButtonUp);
-                }
-            }
-        }
-
-        void OnMouseOver()
-        {
-            if (_mainEngine.Initialized)
-            {
-                Vector2 pixelUV = GetScreenCoords();
-
-                if (pixelUV.x > 0)
-                {
-                    int px = (int) pixelUV.x;
-                    int py = (int) pixelUV.y;
-
-                    ProcessScrollInput(px, py);
-
-                    if (posX != px || posY != py)
+                    MouseMessage msg = new MouseMessage
                     {
-                        MouseMessage msg = new MouseMessage
-                        {
-                            Type = MouseEventType.Move,
-                            X = px,
-                            Y = py,
-                            GenericType = MessageLibrary.BrowserEventType.Mouse,
-                            // Delta = e.Delta,
-                            Button = MouseButton.None
-                        };
+                        Type = MouseEventType.Move,
+                        X = xMouse,
+                        Y = yMouse,
+                        GenericType = MessageLibrary.BrowserEventType.Mouse,
+                        // Delta = e.Delta,
+                        Button = MouseButton.None
+                    };
 
-                        if (Input.GetMouseButton(0))
-                            msg.Button = MouseButton.Left;
-                        if (Input.GetMouseButton(1))
-                            msg.Button = MouseButton.Right;
-                        if (Input.GetMouseButton(1))
-                            msg.Button = MouseButton.Middle;
+                    if (pointer.mouseLeftHold)
+                        msg.Button = MouseButton.Left;
+                    if (pointer.mouseRightHold)
+                        msg.Button = MouseButton.Right;
+                    if (pointer.mouseMiddleHold)
+                        msg.Button = MouseButton.Middle;
 
-                        posX = px;
-                        posY = py;
-                        _mainEngine.SendMouseEvent(msg);
-                    }
-
-                    //check other buttons...
-                    if (Input.GetMouseButtonDown(1))
-                        SendMouseButtonEvent(px, py, MouseButton.Right, MouseEventType.ButtonDown);
-                    if (Input.GetMouseButtonUp(1))
-                        SendMouseButtonEvent(px, py, MouseButton.Right, MouseEventType.ButtonUp);
-                    if (Input.GetMouseButtonDown(2))
-                        SendMouseButtonEvent(px, py, MouseButton.Middle, MouseEventType.ButtonDown);
-                    if (Input.GetMouseButtonUp(2))
-                        SendMouseButtonEvent(px, py, MouseButton.Middle, MouseEventType.ButtonUp);
+                    posX = xMouse;
+                    posY = yMouse;
+                    _mainEngine.SendMouseEvent(msg);
                 }
-            }
 
-            // Debug.Log(pixelUV);
+                if (pointer.mouseLeftDown) SendMouseButtonEvent(xMouse, yMouse, MouseButton.Left, MouseEventType.ButtonDown);
+                if (pointer.mouseLeftDown) SendMouseButtonEvent(xMouse, yMouse, MouseButton.Left, MouseEventType.ButtonUp);
+                if (pointer.mouseRightDown) SendMouseButtonEvent(xMouse, yMouse, MouseButton.Right, MouseEventType.ButtonDown);
+                if (pointer.mouseRightDown) SendMouseButtonEvent(xMouse, yMouse, MouseButton.Right, MouseEventType.ButtonUp);
+                if (pointer.mouseMiddleDown) SendMouseButtonEvent(xMouse, yMouse, MouseButton.Middle, MouseEventType.ButtonDown);
+                if (pointer.mouseMiddleDown) SendMouseButtonEvent(xMouse, yMouse, MouseButton.Middle, MouseEventType.ButtonUp);
+            }
         }
+
+        //void OnMouseDown()
+        //{
+        //    if (_mainEngine.Initialized)
+        //    {
+        //        Vector2 pixelUV = GetScreenCoords();
+        //        if (pixelUV.x > 0)
+        //        {
+        //            SendMouseButtonEvent((int) pixelUV.x, (int) pixelUV.y, MouseButton.Left, MouseEventType.ButtonDown);
+        //        }
+        //    }
+        //}
+
+        //void OnMouseUp()
+        //{
+        //    if (_mainEngine.Initialized)
+        //    {
+        //        Vector2 pixelUV = GetScreenCoords();
+        //        if (pixelUV.x > 0)
+        //        {
+        //            SendMouseButtonEvent((int) pixelUV.x, (int) pixelUV.y, MouseButton.Left, MouseEventType.ButtonUp);
+        //        }
+        //    }
+        //}
+
+        //void OnMouseOver()
+        //{
+        //    if (_mainEngine.Initialized)
+        //    {
+        //        Vector2 pixelUV = GetScreenCoords();
+        //        if (pixelUV.x > 0)
+        //        {
+        //            int px = (int) pixelUV.x;
+        //            int py = (int) pixelUV.y;
+        //            ProcessScrollInput(px, py);
+        //            if (posX != px || posY != py)
+        //            {
+        //                MouseMessage msg = new MouseMessage
+        //                {
+        //                    Type = MouseEventType.Move,
+        //                    X = px,
+        //                    Y = py,
+        //                    GenericType = MessageLibrary.BrowserEventType.Mouse,
+        //                    // Delta = e.Delta,
+        //                    Button = MouseButton.None
+        //                };
+        //                if (Input.GetMouseButton(0))
+        //                    msg.Button = MouseButton.Left;
+        //                if (Input.GetMouseButton(1))
+        //                    msg.Button = MouseButton.Right;
+        //                if (Input.GetMouseButton(1))
+        //                    msg.Button = MouseButton.Middle;
+        //                posX = px;
+        //                posY = py;
+        //                _mainEngine.SendMouseEvent(msg);
+        //            }
+        //            //check other buttons...
+        //            if (Input.GetMouseButtonDown(1))
+        //                SendMouseButtonEvent(px, py, MouseButton.Right, MouseEventType.ButtonDown);
+        //            if (Input.GetMouseButtonUp(1))
+        //                SendMouseButtonEvent(px, py, MouseButton.Right, MouseEventType.ButtonUp);
+        //            if (Input.GetMouseButtonDown(2))
+        //                SendMouseButtonEvent(px, py, MouseButton.Middle, MouseEventType.ButtonDown);
+        //            if (Input.GetMouseButtonUp(2))
+        //                SendMouseButtonEvent(px, py, MouseButton.Middle, MouseEventType.ButtonUp);
+        //        }
+        //    }
+        //    // Debug.Log(pixelUV);
+        //}
 
         #endregion
 
         #region Helpers
 
-        private Vector2 GetScreenCoords()
-        {
-            RaycastHit hit;
-            if (
-                !Physics.Raycast(
-                    MainCamera.ScreenPointToRay(Input.mousePosition), out hit))
-                return new Vector2(-1f, -1f);
-            Texture tex = _mainMaterial.mainTexture;
+        //private Vector2 GetScreenCoords()
+        //{
+        //    RaycastHit hit;
+        //    if (
+        //        !Physics.Raycast(
+        //            MainCamera.ScreenPointToRay(Input.mousePosition), out hit))
+        //        return new Vector2(-1f, -1f);
+        //    Texture tex = _mainMaterial.mainTexture;
 
 
-            Vector2 pixelUV = hit.textureCoord;
-            pixelUV.x = (1 - pixelUV.x)*tex.width;
-            pixelUV.y *= tex.height;
-            return pixelUV;
-
-
-
-
-        }
+        //    Vector2 pixelUV = hit.textureCoord;
+        //    pixelUV.x = (1 - pixelUV.x)*tex.width;
+        //    pixelUV.y *= tex.height;
+        //    return pixelUV;
+        //}
 
         private void SendMouseButtonEvent(int x, int y, MouseButton btn, MouseEventType type)
         {
@@ -429,7 +447,7 @@ namespace SimpleWebBrowser
 
         private void ProcessScrollInput(int px, int py)
         {
-            float scroll = Input.GetAxis("Mouse ScrollWheel");
+            float scroll = pointer.mouseWheelValue;
 
             scroll = scroll*_mainEngine.BrowserTexture.height;
 
@@ -463,11 +481,8 @@ namespace SimpleWebBrowser
         // Update is called once per frame
         void Update()
         {
-
             _mainEngine.UpdateTexture();
-
-
-
+            
             //Dialog
             if (_showDialog)
             {
@@ -483,31 +498,22 @@ namespace SimpleWebBrowser
 
             }
 
-            //Status
-            if (_setUrl)
+            if(pointer.activeObjectID == mainUIPanel.Enter.GetInstanceID())
             {
-                _setUrl = false;
-                mainUIPanel.UrlField.text = _setUrlString;
-
+                if (pointer.mouseLeftDown)
+                    Navigate();
             }
 
-
-
-            if (_focused && !mainUIPanel.UrlField.isFocused) //keys
+            if (pointer.activeObjectID == mainUIPanel.UrlField.GetInstanceID())
             {
-                foreach (char c in Input.inputString)
-                {
-
-                    _mainEngine.SendCharEvent((int) c, KeyboardEventType.CharKey);
-                }
-                ProcessKeyEvents();
-
-
-
-
-
+                if (mainUIPanel.UrlText.text.Length > 0)
+                    if (mainUIPanel.UrlText.text[mainUIPanel.UrlText.text.Length - 1] == '\r')
+                    {
+                        Debug.Log("Navigate");
+                        pointer.activeObjectID = gameObject.GetInstanceID();
+                        Navigate();
+                    }
             }
-
         }
 
         #region Keys
@@ -535,6 +541,16 @@ namespace SimpleWebBrowser
             _mainEngine.Shutdown();
         }
 
+        public void ProcessAllInputs()
+        {
+            ProcessMouseEvent();
+            if (pointer.inputString != null)
+                foreach (char c in pointer.inputString)
+                {
+                    _mainEngine.SendCharEvent((int)c, KeyboardEventType.CharKey);
+                }
+            ProcessKeyEvents();
+        }
 
         public event BrowserEngine.PageLoaded OnPageLoaded;
     }

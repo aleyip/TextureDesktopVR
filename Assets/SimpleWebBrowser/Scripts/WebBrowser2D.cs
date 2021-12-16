@@ -174,8 +174,8 @@ namespace SimpleWebBrowser
 
             // _mainInput = MainUrlInput.GetComponent<Input>();
             mainUIPanel.KeepUIVisible = KeepUIVisible;
-            if (!KeepUIVisible)
-                mainUIPanel.Hide();
+            //if (!KeepUIVisible)
+            //    mainUIPanel.Hide();
 
             //attach dialogs and querys
             _mainEngine.OnJavaScriptDialog += _mainEngine_OnJavaScriptDialog;
@@ -280,7 +280,7 @@ namespace SimpleWebBrowser
         public void OnNavigate()
         {
             // MainUrlInput.isFocused
-            _mainEngine.SendNavigateEvent(mainUIPanel.UrlField.text, false, false);
+            _mainEngine.SendNavigateEvent(mainUIPanel.UrlText.text, false, false);
 
         }
 
@@ -309,7 +309,7 @@ namespace SimpleWebBrowser
         public void OnPointerExit(PointerEventData data)
         {
             _focused = false;
-            mainUIPanel.Hide();
+            //mainUIPanel.Hide();
             StopCoroutine("TrackPointer");
         }
 
@@ -543,24 +543,24 @@ namespace SimpleWebBrowser
             if (_setUrl)
             {
                 _setUrl = false;
-                mainUIPanel.UrlField.text = _setUrlString;
+                mainUIPanel.UrlText.text = _setUrlString;
 
             }
 
 
 
-            if (_focused && !mainUIPanel.UrlField.isFocused) //keys
-            {
-                foreach (char c in Input.inputString)
-                {
-                    _mainEngine.SendCharEvent((int) c, KeyboardEventType.CharKey);
+            //if (_focused && !mainUIPanel.UrlField.isFocused) //keys
+            //{
+            //    foreach (char c in Input.inputString)
+            //    {
+            //        _mainEngine.SendCharEvent((int) c, KeyboardEventType.CharKey);
 
 
-                }
-                ProcessKeyEvents();
+            //    }
+            //    ProcessKeyEvents();
 
 
-            }
+            //}
 
         }
 

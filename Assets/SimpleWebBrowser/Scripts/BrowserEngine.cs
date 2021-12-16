@@ -438,9 +438,7 @@ namespace SimpleWebBrowser
 
             if (Initialized)
             {
-
-
-                if (_bufferBytes == null)
+                if (_bufferBytes == null || _mainTexArray.Length != _bufferBytes.Length)
                 {
                     long arraySize = _mainTexArray.Length;
                     Debug.Log("Memory array size:" + arraySize);
