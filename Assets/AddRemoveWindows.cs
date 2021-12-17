@@ -35,6 +35,7 @@ public class AddRemoveWindows : MonoBehaviour
         lastUpdateTime = Time.time;
         lastPollWindowsTime = Time.time;
 
+        if (showBrowser) CreateBrowser("testeBrowser");
         //if (showBrowser)
         //{
         //    //Debug.Log("Creating Browser");

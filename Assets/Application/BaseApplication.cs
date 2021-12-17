@@ -15,8 +15,10 @@ public class BaseApplication : MonoBehaviour
     //DesktopCapture desktopCapture;
     //GameObject desktopObject;
 
+    private GameObject goParent;
     protected WindowCapture windowsRender;
     protected GameObject windowObject;
+    private BaseAppUI ui;
 
     public float windowScale = 0.001f;
 
@@ -52,14 +54,15 @@ public class BaseApplication : MonoBehaviour
     public void passWindow(WindowCapture window)
     {
         windowsRender = window;
-        windowObject.name = window.windowInfo.title;
+        goParent.name = window.windowInfo.title;
         Debug.Log(windowObject.GetInstanceID());
         pointer.activeObjectID = windowObject.GetInstanceID();
+        ui.setName(goParent.name);
     }
 
     public void Move(Vector3 pos)
     {
-        windowObject.transform.position = pos;
+        goParent.transform.position = pos;
     }
 
     public void Close()
@@ -72,7 +75,7 @@ public class BaseApplication : MonoBehaviour
     
     private Vector3 GetPlayerPlaneMousePos()
     {
-        Plane plane = new Plane(windowObject.transform.position - Camera.main.transform.position, windowObject.transform.position);
+        Plane plane = new Plane(goParent.transform.position - Camera.main.transform.position, goParent.transform.position);
         //Ray ray = Camera.main.ScreenPointToRay(Input.mousePosition);
         float dist;
         if (plane.Raycast(pointer.rayPointer, out dist))
@@ -96,10 +99,19 @@ public class BaseApplication : MonoBehaviour
         //desktopObject.transform.GetComponent<Renderer>().material = new Material(desktopShader);
         //desktopObject.transform.localEulerAngles = new Vector3(90, 0, 0);
 
-        windowObject = GameObject.CreatePrimitive(PrimitiveType.Plane);
+        //windowObject = GameObject.CreatePrimitive(PrimitiveType.Plane);
+        goParent = Instantiate(Resources.Load("BaseAppPrefab", typeof(GameObject))) as GameObject;
+        goParent.transform.localScale = new Vector3(windowScale, windowScale, windowScale);
+
+        windowObject = goParent.transform.Find("Main").gameObject;
         windowObject.transform.GetComponent<Renderer>().material = new Material(windowShader);
-        windowObject.transform.localEulerAngles = new Vector3(0, -180, 0);
+        Debug.Log(windowObject.name);
         pointer = GameObject.Find("Pointer").GetComponent<Pointer>();
+        windowObject.transform.localEulerAngles = new Vector3(0, -180, 0);
+
+        ui = goParent.transform.Find("UI").gameObject.GetComponent<BaseAppUI>();
+        ui.InitPrefabLinks();
+        ui.setColorUI(Color.green);
     }
 
     protected void Start()
@@ -109,11 +121,11 @@ public class BaseApplication : MonoBehaviour
     // Update is called once per frame
     protected void Update()
     {
-        //Inicio CONVERSOR
-        //Converte direcao em ponto xy na janela
         if (pointer.hit.collider != null)
             if (pointer.hit.collider.gameObject == windowObject)
             {
+                //Inicio CONVERSOR
+                //Converte direcao em ponto xy na janela
                 Int32 xMouse = (Int32)(pointer.hit.textureCoord.x * windowsRender.windowWidth);
                 Int32 yMouse = (Int32)((1.0f - pointer.hit.textureCoord.y) * windowsRender.windowHeight);
                 Int32 mousePos = (Int32)((yMouse << 16) | xMouse);
@@ -129,26 +141,26 @@ public class BaseApplication : MonoBehaviour
                 //aplicacao de cores na esfera
                 if (xMouse >= 0 && xMouse <= windowsRender.windowWidth && yMouse >= 0 && yMouse <= windowsRender.windowHeight)
                 {
-                    if ((xMouse <= 3 && (yMouse <= 3 || yMouse >= windowsRender.windowHeight - 3)) ||
-                         (xMouse >= windowsRender.windowWidth - 3 && (yMouse <= 3 || yMouse >= windowsRender.windowHeight - 3)))
+                    if ((xMouse <= 8 && (yMouse <= 8 || yMouse >= windowsRender.windowHeight - 8)) ||
+                         (xMouse >= windowsRender.windowWidth - 8 && (yMouse <= 8 || yMouse >= windowsRender.windowHeight - 8)))
                     {
                         pointer.sphereColor = ColorSettings.hoverDiagRescaleColor;
                     }
-                    else if ((xMouse <= 3 || xMouse >= windowsRender.windowWidth - 3))
+                    else if ((xMouse <= 8 || xMouse >= windowsRender.windowWidth - 8))
                     {
                         pointer.sphereColor = ColorSettings.hoverHorRescaleColor;
                     }
-                    else if ((yMouse <= 3 || yMouse >= windowsRender.windowHeight - 3))
+                    else if ((yMouse <= 8 || yMouse >= windowsRender.windowHeight - 8))
                     {
                         pointer.sphereColor = ColorSettings.hoverVertRescaleColor;
                     }
-                    else if (yMouse < 30)
+                    else if (yMouse < 27 || function == MouseFunction.move)
                     {
                         pointer.sphereColor = ColorSettings.hoverMoveColor;
                     }
                     else
                     {
-                        if(pointer.activeObjectID == windowObject.GetInstanceID())
+                        if (pointer.activeObjectID == windowObject.GetInstanceID())
                             pointer.sphereColor = ColorSettings.hoverActiveWindowColor;
                         else
                             pointer.sphereColor = ColorSettings.hoverInactiveWindowColor;
@@ -222,10 +234,10 @@ public class BaseApplication : MonoBehaviour
                 Vector3 endPos = oldMouseVec.magnitude * pointer.rayPointer.direction + relPos;
                 //Usa Vector2 pq pega o angulo projetado em x-y, camera e pos inicial foram ajustada para permitir isso
                 //roda em torno do eixo vertical
-                windowObject.transform.RotateAround(new Vector3(0, 0, 0), Vector3.forward, Vector2.SignedAngle(windowObject.transform.position, endPos));
+                goParent.transform.RotateAround(new Vector3(0, 0, 0), Vector3.forward, Vector2.SignedAngle(goParent.transform.position, endPos));
                 Vector3 vecPerp = Vector3.Cross(Vector3.back, windowObject.transform.position);
                 //roda em torno do eixo horizontal relativo
-                windowObject.transform.RotateAround(new Vector3(0, 0, 0), vecPerp, Vector3.SignedAngle(windowObject.transform.position, endPos, vecPerp));
+                goParent.transform.RotateAround(new Vector3(0, 0, 0), vecPerp, Vector3.SignedAngle(goParent.transform.position, endPos, vecPerp));
                 oldMouseVec = MouseVecMove;
                 break;
             case MouseFunction.resizeHor:
@@ -249,11 +261,15 @@ public class BaseApplication : MonoBehaviour
                 break;
             case MouseFunction.changeDistance:
                 //Impede que chega no 0,0,0
-                if(windowObject.transform.position.magnitude > -pointer.mouseWheelValue)
-                    windowObject.transform.position += windowObject.transform.position.normalized * pointer.mouseWheelValue;
+                if(goParent.transform.position.magnitude > -pointer.mouseWheelValue)
+                    goParent.transform.position += goParent.transform.position.normalized * pointer.mouseWheelValue;
                 break;
         }
         //Fim FUNCOES JANELA
+
+        if (pointer.activeObjectID == windowObject.GetInstanceID()) ui.setColorUI(ColorSettings.windowActiveColor);
+        else ui.setColorUI(ColorSettings.windowInactiveColor);
+
 
         bool didChangeTex;
         if (windowObject != null)
@@ -265,7 +281,10 @@ public class BaseApplication : MonoBehaviour
                 windowObject.GetComponent<Renderer>().material.mainTexture = windowTexture;
                 Debug.Log($"Dim: {windowsRender.windowWidth} {windowsRender.windowHeight}");
             }
-            windowObject.transform.localScale = new Vector3(windowsRender.windowWidth * windowScale, 0.1f, windowsRender.windowHeight * windowScale);
+            //windowObject.transform.localScale = new Vector3(windowsRender.windowWidth * windowScale, 0.1f, windowsRender.windowHeight * windowScale);
+            windowObject.transform.localScale = new Vector3(windowsRender.windowWidth, 0.1f, windowsRender.windowHeight);
+            ui.gameObject.GetComponent<RectTransform>().sizeDelta = new Vector2(windowObject.transform.localScale.x, windowObject.transform.localScale.z);
+            
         }
     }
 

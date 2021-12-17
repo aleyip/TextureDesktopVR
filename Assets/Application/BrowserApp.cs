@@ -64,10 +64,15 @@ public class BrowserApp : MonoBehaviour
 
         if (pointer.hit.collider != null)
         {
-            if (pointer.hit.collider.gameObject == webBrowser.GetComponent<WebBrowser>().mainUIPanel.gameObject)
+
+            if (pointer.hit.collider.gameObject == webBrowser.GetComponent<WebBrowser>().mainUIPanel.gameObject
+                || function == MouseFunction.move)
             {
                 pointer.sphereColor = ColorSettings.hoverMoveColor;
+            }
 
+            if (pointer.hit.collider.gameObject == webBrowser.GetComponent<WebBrowser>().mainUIPanel.gameObject)
+            {
                 if (pointer.mouseLeftDown && function == MouseFunction.nothing)
                 {
                     leftMouseHold = true;
@@ -76,7 +81,10 @@ public class BrowserApp : MonoBehaviour
                 }
             }
             if (pointer.mouseLeftUp && (function == MouseFunction.move))
+            {
                 function = MouseFunction.nothing;
+                pointer.activeObjectID = webBrowser.GetInstanceID();
+            }
 
             if (pointer.hit.collider.gameObject == webBrowser)
             {
@@ -136,5 +144,8 @@ public class BrowserApp : MonoBehaviour
                 if(function == MouseFunction.nothing) web.ProcessAllInputs();
             }
         }
+
+        if (pointer.activeObjectID == webBrowser.GetInstanceID()) webBrowser.GetComponent<WebBrowser>().mainUIPanel.Background.color = ColorSettings.windowActiveColor;
+        else webBrowser.GetComponent<WebBrowser>().mainUIPanel.Background.color = ColorSettings.windowInactiveColor;
     }
 }

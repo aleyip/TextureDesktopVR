@@ -14,5 +14,8 @@ public class ColorSettings
 
     public static Color buttonDefaultColor = Color.white;
     public static Color buttonHoverColor = Color.grey;
-    public static Color buttonClickColor = Color.black;
+    public static Color buttonClickColor = new Color32(169, 169, 169, 255);
+
+    public static Color windowActiveColor = new Color32(0, 100, 0, 255);
+    public static Color windowInactiveColor = Color.grey;
 }
